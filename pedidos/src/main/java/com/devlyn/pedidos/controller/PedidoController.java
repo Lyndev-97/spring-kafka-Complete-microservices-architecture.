@@ -1,0 +1,26 @@
+package com.devlyn.pedidos.controller;
+
+import com.devlyn.pedidos.controller.dto.NovoPedidoDTO;
+import com.devlyn.pedidos.controller.mappers.PedidoMapper;
+import com.devlyn.pedidos.service.PedidoService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("pedidos")
+@RequiredArgsConstructor
+public class PedidoController {
+    private final PedidoService service;
+    private final PedidoMapper mapper;
+
+    @PostMapping
+    public ResponseEntity<Object> criar(@RequestBody NovoPedidoDTO novoPedidoDto) {
+        var pedido = mapper.map(novoPedidoDto);
+        var novoPedido = service.criarPedido(pedido);
+        return ResponseEntity.ok(novoPedido.getCodigo());
+    }
+}
