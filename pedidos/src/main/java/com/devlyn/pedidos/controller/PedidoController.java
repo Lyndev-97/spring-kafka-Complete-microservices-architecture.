@@ -2,7 +2,10 @@ package com.devlyn.pedidos.controller;
 
 import com.devlyn.pedidos.controller.dto.NovoPedidoDTO;
 import com.devlyn.pedidos.controller.mappers.PedidoMapper;
+import com.devlyn.pedidos.model.ErrorResposta;
+import com.devlyn.pedidos.model.exception.ValidationException;
 import com.devlyn.pedidos.service.PedidoService;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,8 +22,13 @@ public class PedidoController {
 
     @PostMapping
     public ResponseEntity<Object> criar(@RequestBody NovoPedidoDTO novoPedidoDto) {
-        var pedido = mapper.map(novoPedidoDto);
-        var novoPedido = service.criarPedido(pedido);
-        return ResponseEntity.ok(novoPedido.getCodigo());
+        try {
+            var pedido = mapper.map(novoPedidoDto);
+            var novoPedido = service.criarPedido(pedido);
+            return ResponseEntity.ok(novoPedido.getCodigo());
+        }catch (ValidationException ex) {
+            var erro = new ErrorResposta("Erro de validação dos campos", ex.getField(), ex.getMessage());
+            return ResponseEntity.badRequest().body(erro);
+        }
     }
 }
