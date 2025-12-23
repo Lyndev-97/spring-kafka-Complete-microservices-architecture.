@@ -1,5 +1,6 @@
 package com.devlyn.pedidos.model;
 
+import com.devlyn.pedidos.client.representation.ClienteRepresentation;
 import com.devlyn.pedidos.model.enums.StatusPedido;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -51,5 +52,8 @@ public class Pedido {
 
     @OneToMany(mappedBy = "pedido")
     private List<ItemPedido> itens;
+
+    @Transient
+    private ClienteRepresentation dadosCliente;
 
 }
