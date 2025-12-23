@@ -1,8 +1,11 @@
 package com.devlyn.pedidos.service;
 
 import com.devlyn.pedidos.client.ServicoBancarioClient;
+import com.devlyn.pedidos.model.DadosPagamento;
 import com.devlyn.pedidos.model.Pedido;
 import com.devlyn.pedidos.model.enums.StatusPedido;
+import com.devlyn.pedidos.model.enums.TipoPagamento;
+import com.devlyn.pedidos.model.exception.ItemNaoEncontradoException;
 import com.devlyn.pedidos.repository.ItemPedidoRepository;
 import com.devlyn.pedidos.repository.PedidoRepository;
 import com.devlyn.pedidos.validator.PedidoValidator;
@@ -57,5 +60,36 @@ public class PedidoService {
             pedido.setObservacoes(observacoes);
         }
             repository.save(pedido);
+    }
+
+    @Transactional
+    public void adicionarNovoPagamento(Long codigoPedido, String dadosCartao, TipoPagamento tipo){
+
+        var pedidoEncontrado = repository.findById(codigoPedido);
+        if(pedidoEncontrado.isEmpty()){
+            throw new ItemNaoEncontradoException("Pedido não encontrado para o código informado: " + codigoPedido);
+        }
+
+        var pedido = pedidoEncontrado.get();
+
+        DadosPagamento dadosPagamento = new DadosPagamento();
+        dadosPagamento.setTipoPagamento(tipo);
+        dadosPagamento.setDados(dadosCartao);
+
+        pedido.setDadosPagamento(dadosPagamento);
+        pedido.setStatusPedido(StatusPedido.REALIZADO);
+        pedido.setObservacoes("Um Novo pagamento foi enviado, aguardando o processamento");
+
+        String novaChavePagamento = servicoBancarioClient.solicitarPagamento(pedido);
+        pedido.setChavePagamento(novaChavePagamento);
+        /**
+         * repository.save(pedido); -> Nao é necessario salvar, devido a anotação @Transactional desse metodo.
+         * Como o pedido foi obtido atraves do repository.findById(codigoPedido), qualquer alteracao por set
+         * nesse pedido dentro desse metodo, sera capturada pela anotacao @Transactional que ira atualizar o
+         * banco ao finalizar a execucao do metodo
+         *
+         */
+
+
     }
 }
